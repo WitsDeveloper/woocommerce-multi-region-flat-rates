@@ -11,7 +11,7 @@
  * Author URI: http://www.witstechnologies.co.ke
  * License: GPLv3 or later
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
- * Text Domain: woocommerce-multi-region-flat-rates
+ * Text Domain: wmrfr
  **/
 
 
@@ -67,27 +67,27 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
     function init_form_fields() {
      $this->form_fields = array(
       'enabled' => array(
-       'title'   => __('Enable', 'woocommerce'),
+       'title'   => __('Enable', 'wmrfr'),
        'type'   => 'checkbox',
-       'label'   => __('Enable this shipping method', 'woocommerce'),
+       'label'   => __('Enable this shipping method', 'wmrfr'),
        'default'  => 'no',
        'desc_tip'  => true
       ),
       'title' => array(
-       'title'   => __('Method Title', 'woocommerce'),
+       'title'   => __('Method Title', 'wmrfr'),
        'type'   => 'text',
-       'description' => __('This controls the title which the user sees during checkout.', 'woocommerce'),
-       'default'  => __('Flat Rate per Country/Region', 'woocommerce'),
+       'description' => __('This controls the title which the user sees during checkout.', 'wmrfr'),
+       'default'  => __('Flat Rate per Country/Region', 'wmrfr'),
        'desc_tip'  => true
       ),
       'tax_status' => array(
-       'title'   => __('Tax Status', 'woocommerce'),
+       'title'   => __('Tax Status', 'wmrfr'),
        'type'   => 'select',
        'description' => '',
        'default'  => 'taxable',
        'options'  => array(
-        'taxable' => __('Taxable', 'woocommerce'),
-        'none'  => __('None', 'woocommerce'),
+        'taxable' => __('Taxable', 'wmrfr'),
+        'none'  => __('None', 'wmrfr'),
        ),
        'desc_tip'  => true
       )
@@ -101,7 +101,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
      * @param mixed $package
      * @return void
      */
-    public function calculate_shipping($package) {
+    public function calculate_shipping($package = array()) {
      global $wpdb, $woocommerce;
 
      $cust_shipping_country = $woocommerce->customer->get_shipping_country();
@@ -156,8 +156,9 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
 
         $rate = array(
          'id'  => $postID,
-         'label' => $region_carrier . " - To Door<br>" . $region_days . " day(s)<br>Shipping",
-         'cost'  => $region_rate_door
+         'label' => $region_carrier . " - To Door - " . $region_days . " day(s) - Shipping",
+         'cost'  => $region_rate_door,
+         'calc_tax' => 'per_order'
         );
         // Register the rate (to door)
         $this->add_rate($rate);
@@ -167,8 +168,9 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
 
         $rate = array(
          'id'  => $postID . "0",
-         'label' => $region_carrier . " - Pickup<br>" . $region_days . " day(s)<br>Shipping",
-         'cost'  => $region_rate_pickup
+         'label' => $region_carrier . " - Pickup - " . $region_days . " day(s) - Shipping",
+         'cost'  => $region_rate_pickup,
+         'calc_tax' => 'per_order'
         );
         // Register the rate (pickup)
         $this->add_rate($rate);
@@ -220,7 +222,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
   );
   $args = array(
    'labels'    => $labels,
-   'description'   => __('This allows you to manage the shipping rates for use with ' . $plural . '. Only works with WooCommerce.', 'woocommerce'),
+   'description'   => __('This allows you to manage the shipping rates for use with ' . $plural . '. Only works with WooCommerce.', 'wmrfr'),
    'public'             => true,
    'publicly_queryable' => true,
    'show_ui'    => true,
@@ -264,28 +266,28 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
  function wmrfr_meta_callback($post) {
   global $woocommerce;
 
-  wp_nonce_field(basename(__FILE__), 'wmrfr_nonce_data');
+  //wp_nonce_field('wmrfr_138cj347cs1ps8', 'wmrfr_nonce_data');
   $meta_values = get_post_meta($post->ID);
 
   $region_carrier = isset($meta_values['region_carrier'][0]) ? $meta_values['region_carrier'][0] : '';
   $region_country = isset($meta_values['region_country'][0]) ? $meta_values['region_country'][0] : '';
   $region_days = isset($meta_values['region_days'][0]) ? $meta_values['region_days'][0] : '';
-  $region_destination = isset($meta_values['region_destination'][0]) ? $meta_values['region_destination'][0] : '';
+  $region_destination = isset($meta_values['region_destination'][0]) ? $meta_values['region_destination'][0] : '*';
   $region_branch = isset($meta_values['region_branch'][0]) ? $meta_values['region_branch'][0] : '';
   $region_rate_door = isset($meta_values['region_rate_door'][0]) ? $meta_values['region_rate_door'][0] : 0;
   $region_rate_pickup = isset($meta_values['region_rate_pickup'][0]) ? $meta_values['region_rate_pickup'][0] : 0;
   $region_contact = isset($meta_values['region_contact'][0]) ? $meta_values['region_contact'][0] : '';
-  $region_track_type = isset($meta_values['region_track_type'][0]) ? $meta_values['region_track_type'][0] : '';
+  $region_delivery_method = isset($meta_values['region_delivery_method'][0]) ? $meta_values['region_delivery_method'][0] : '';
 ?>
   <div class="settings-tab metaboxes-tab">
    <div class="meta-row" style="padding:0 12px;">
     <div class="the-metabox text region_carrier clearfix">
-     <label for="region_carrier" class="row-region_carrier"><?php _e('Carrier', 'woocommerce'); ?></label>
+     <label for="region_carrier" class="row-region_carrier"><?php _e('Carrier', 'wmrfr'); ?></label>
      <p><input type="text" name="region_carrier" id="region_carrier" value="<?php echo esc_attr($region_carrier); ?>"></p>
     </div>
 
     <div class="the-metabox text region_country clearfix">
-     <label for="region_country" class="row-region_country"><?php _e('Country', 'woocommerce'); ?></label>
+     <label for="region_country" class="row-region_country"><?php _e('Country', 'wmrfr'); ?></label>
      <?php
      woocommerce_form_field(
       'shipping_country',
@@ -299,38 +301,38 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
     </div>
 
     <div class="the-metabox number region_days clearfix">
-     <label for="region_days" class="row-region_days"><?php _e('Delivery Days', 'woocommerce'); ?></label>
-     <p><input type="text" name="region_days" id="region_days" placeholder="<?php _e('Example: 7 - 10', 'woocommerce'); ?>" value="<?php echo esc_attr($region_days); ?>"></p>
+     <label for="region_days" class="row-region_days"><?php _e('Delivery Days', 'wmrfr'); ?></label>
+     <p><input type="text" name="region_days" id="region_days" placeholder="<?php _e('Example: 7 - 10', 'wmrfr'); ?>" value="<?php echo esc_attr($region_days); ?>"></p>
     </div>
 
     <div class="the-metabox text region_destination clearfix">
-     <label for="region_destination" class="row-region_destination"><?php _e('Destination', 'woocommerce'); ?></label>
-     <p><input type="text" name="region_destination" id="region_destination" value="<?php echo esc_attr($region_destination); ?>"></p>
+     <label for="region_destination" class="row-region_destination"><?php _e('Destination (* for all regions in selected country)', 'wmrfr'); ?></label>
+     <p><input type="text" name="region_destination" id="region_destination" placeholder="<?php _e('Example: * for all', 'wmrfr'); ?>" value="<?php echo esc_attr($region_destination); ?>"></p>
     </div>
 
     <div class="the-metabox text region_branch clearfix">
-     <label for="region_branch" class="row-region_branch"><?php _e('Branch', 'woocommerce'); ?></label>
+     <label for="region_branch" class="row-region_branch"><?php _e('Branch (warehouse)', 'wmrfr'); ?></label>
      <p><input type="text" name="region_branch" id="region_branch" value="<?php echo esc_attr($region_branch); ?>"></p>
     </div>
 
     <div class="the-metabox number region_rate_door clearfix">
-     <label for="region_rate_door" class="row-region_rate_door"><?php _e('Rate to Door', 'woocommerce'); ?></label>
+     <label for="region_rate_door" class="row-region_rate_door"><?php _e('Rate to Door', 'wmrfr'); ?></label>
      <p><input type="number" step="any" min="-1" name="region_rate_door" id="region_rate_door" value="<?php echo esc_attr($region_rate_door); ?>"></p>
     </div>
 
     <div class="the-metabox number region_rate_pickup clearfix">
-     <label for="region_rate_pickup" class="row-region_rate_pickup"><?php _e('Rate to Pickup', 'woocommerce'); ?></label>
+     <label for="region_rate_pickup" class="row-region_rate_pickup"><?php _e('Rate to Pickup', 'wmrfr'); ?></label>
      <p><input type="number" step="any" min="-1" name="region_rate_pickup" id="region_rate_pickup" value="<?php echo esc_attr($region_rate_pickup); ?>"></p>
     </div>
 
     <div class="the-metabox text region_contact clearfix">
-     <label for="region_contact" class="row-region_contact"><?php _e('Region Contact', 'woocommerce'); ?></label>
+     <label for="region_contact" class="row-region_contact"><?php _e('Region Contact', 'wmrfr'); ?></label>
      <p><input type="text" name="region_contact" id="region_contact" value="<?php echo esc_attr($region_contact); ?>"></p>
     </div>
 
-    <div class="the-metabox text region_track_type clearfix">
-     <label for="region_track_type" class="row-region_track_type"><?php _e('Track Type', 'woocommerce'); ?></label>
-     <p><input type="text" name="region_track_type" id="region_track_type" value="<?php echo esc_attr($region_track_type); ?>"></p>
+    <div class="the-metabox text region_delivery_method clearfix">
+     <label for="region_delivery_method" class="row-region_delivery_method"><?php _e('Delivery Method', 'wmrfr'); ?></label>
+     <p><input type="text" name="region_delivery_method" id="region_delivery_method" value="<?php echo esc_attr($region_delivery_method); ?>"></p>
     </div>
 
    </div>
@@ -347,10 +349,6 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
   // Check save status
   $is_autosave = wp_is_post_autosave($post_id);
   $is_revision = wp_is_post_revision($post_id);
-  // Verify that the nonce is valid.
-  if (!wp_verify_nonce($_POST['wmrfr_nonce_data'], basename(__FILE__))) {
-   return;
-  }
 
   // If this is an autosave, our form has not been submitted, so we don't want to do anything.
   if ($is_autosave || $is_revision) {
@@ -378,7 +376,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
   update_post_meta($post_id, 'region_rate_door', sanitize_text_field($_POST['region_rate_door']));
   update_post_meta($post_id, 'region_rate_pickup', sanitize_text_field($_POST['region_rate_pickup']));
   update_post_meta($post_id, 'region_contact', sanitize_text_field($_POST['region_contact']));
-  update_post_meta($post_id, 'region_track_type', sanitize_text_field($_POST['region_track_type']));
+  update_post_meta($post_id, 'region_delivery_method', sanitize_text_field($_POST['region_delivery_method']));
  }
  add_action('save_post', 'wmrfr_save_meta_box_data');
 
@@ -399,7 +397,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
   $columns["region_rate_door"] = "Rate to Door";
   $columns["region_rate_pickup"] = "Rate to Pickup";
   $columns["region_contact"] = "Region Contact";
-  $columns["region_track_type"] = "Track Type";
+  $columns["region_delivery_method"] = "Delivery Method";
 
   return $columns;
  }
@@ -456,7 +454,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
      break;
     case 'TrackType':
      $vars['orderby'] = 'meta_value';
-     $vars['meta_key'] = 'region_track_type';
+     $vars['meta_key'] = 'region_delivery_method';
      break;
    }
   }
@@ -503,8 +501,8 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
    case 'region_contact':
     echo get_post_meta($post->ID, 'region_contact', true);
     break;
-   case 'region_track_type':
-    echo get_post_meta($post->ID, 'region_track_type', true);
+   case 'region_delivery_method':
+    echo get_post_meta($post->ID, 'region_delivery_method', true);
     break;
   }
  }
