@@ -141,7 +141,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
      $postID = 0;
      //var_dump($get_post_array);
      // We only need unique Post IDs
-     $unique_post_array = array_unique($get_post_array);
+     $unique_post_array = is_array($get_post_array) ? array_unique($get_post_array) : [];
 
      // If we have unique post IDs returned, loop as you add their rates to array
      if (!empty($unique_post_array)) {
